@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工智慧跨域實踐 - 專題展覽</title>
+    <style>
+        /* --- 基礎設定 --- */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- 上方標題區 (15%) --- */
+        .header {
+            height: 15vh;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        .header h1 { 
+            margin: 0; 
+            color: #333; 
+            font-size: 2.2rem;
+            font-weight: 900;
+        }
+        .video-btn {
+            padding: 15px 35px;
+            font-size: 1.3rem;
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+            transition: 0.3s;
+        }
+        .video-btn:active { transform: scale(0.95); }
+
+        /* --- 下方 9 組按鈕區 (85%) --- */
+        .grid-container {
+            height: 85vh;
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 25px; 
+            padding: 30px 50px;
+            background-color: #ffffff;
+        }
+
+        .card {
+            background: #ffffff;
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px 0 10px; 
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-radius: 40px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            overflow: hidden; 
+        }
+
+        .card:active {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(255, 71, 87, 0.15);
+            border-color: #ff4757;
+        }
+        .card:active .teacher-img {
+            filter: grayscale(0%);
+        }
+        .card:active .teacher-container::after,
+        .card:active .teacher-container::before {
+            opacity: 0; 
+        }
+
+        /* --- 文字標題區 --- */
+        .card-top {
+            text-align: center;
+            width: 100%;
+            z-index: 2; 
+        }
+        
+        .group-id {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #ff4757;
+            margin-bottom: 20px;
+            display: block;
+            text-shadow: 
+                2px 2px 0 #fff, -2px -2px 0 #fff, 
+                2px -2px 0 #fff, -2px 2px 0 #fff, 
+                0 2px 0 #fff, 0 -2px 0 #fff, 
+                2px 0 0 #fff, -2px 0 0 #fff,
+                0 0 10px rgba(255,255,255,0.8);
+        }
+        
+        .project-name {
+            font-size: 1.3rem;
+            color: #2d3436;
+            line-height: 1.6; 
+            font-weight: 900; 
+            writing-mode: vertical-lr; 
+            text-orientation: mixed;
+            height: 32vh;
+            margin: 0 auto;
+            text-align: left; 
+            text-shadow: 
+                2px 2px 0 #fff, -2px -2px 0 #fff, 
+                2px -2px 0 #fff, -2px 2px 0 #fff, 
+                0 2px 0 #fff, 0 -2px 0 #fff, 
+                2px 0 0 #fff, -2px 0 0 #fff,
+                0 0 15px rgba(255,255,255,0.9);
+        }
+
+        /* --- 導師圖片容器 --- */
+        .teacher-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90%; 
+            z-index: 1;
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+        }
+
+        .teacher-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--lighten-top) 20%, var(--lighten-bot) 80%);
+            mix-blend-mode: screen; 
+            pointer-events: none; 
+            z-index: 2;
+            transition: opacity 0.3s;
+        }
+
+        .teacher-container::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--color-top) 20%, var(--color-bottom) 80%);
+            mix-blend-mode: color; 
+            opacity: 0.9; 
+            pointer-events: none; 
+            z-index: 3;
+            transition: opacity 0.3s;
+        }
+
+        .teacher-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center bottom; 
+            filter: grayscale(100%); 
+            transition: filter 0.3s;
+        }
+
+        /* --- 海報彈出視窗架構 --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #ffffff; 
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 進入縮放模式後 */
+        .modal-overlay.zoom-mode {
+            display: block !important;
+            overflow-y: auto; 
+            overflow-x: hidden; 
+        }
+
+        .poster-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 95vw;
+            height: 95vh;
+            gap: 80px; 
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.zoom-mode .poster-wrapper {
+            width: 100vw;
+            height: auto;
+            padding: 0;
+            display: block;
+        }
+
+        /* 兩側指導老師樣式 */
+        .modal-teacher {
+            max-width: 12vw;
+            max-height: 50vh;
+            object-fit: contain;
+            z-index: 2010;
+            pointer-events: none; 
+            animation: float 4s ease-in-out infinite;
+            align-self: flex-end; 
+            margin-bottom: 5vh; 
+            display: block;
+        }
+        .modal-teacher.left { animation-delay: 0s; }
+        .modal-teacher.right { animation-delay: 2s; }
+
+        /* 【修改重點】提高權重，確保海報放大時，兩側老師在 CSS 層面絕對隱藏 */
+        .modal-overlay.zoom-mode .modal-teacher {
+            display: none !important;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .poster-view-box {
+            max-width: 65vw; 
+            max-height: 90vh;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.zoom-mode .poster-view-box {
+            max-width: none;
+            max-height: none;
+            box-shadow: none;
+            border-radius: 0;
+            width: 100vw;
+        }
+
+        /* 海報圖片基礎樣式 */
+        .poster-img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            cursor: zoom-in;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: block;
+        }
+
+        /* 雙擊放大狀態 */
+        .poster-img.zoomed {
+            max-width: none !important;
+            max-height: none !important;
+            width: 100vw !important; 
+            height: auto !important; 
+            cursor: zoom-out;
+        }
+
+        /* 關閉按鈕固定在螢幕右上角 */
+        .close-btn {
+            position: fixed; 
+            top: 30px; right: 30px;
+            width: 60px; height: 60px;
+            background: #333;
+            color: white; border: none; border-radius: 50%;
+            font-size: 30px; cursor: pointer;
+            z-index: 2600; 
+        }
+
+        /* --- 影片視窗 --- */
+        .video-modal {
+            width: 80vw; height: 80vh; background: #000; border-radius: 30px; overflow: hidden;
+        }
+        .video-modal iframe { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>人工智慧跨域實踐 ‧ 靜態成果展</h1>
+        <button class="video-btn" onclick="openVideo()">▶ 教授感想影片</button>
+    </div>
+
+    <div class="grid-container" id="gridContainer">
+        </div>
+
+    <div class="modal-overlay" id="posterOverlay" onclick="closePoster()">
+        <button class="close-btn" onclick="closePoster()">✕</button>
+        
+        <div class="poster-wrapper" onclick="event.stopPropagation()">
+            <img class="modal-teacher left" id="posterTeacherLeft" src="" onerror="this.style.display='none';">
+            
+            <div class="poster-view-box" id="posterViewBox">
+                <img class="poster-img" id="posterDisplay" src="" alt="專題海報">
+            </div>
+            
+            <img class="modal-teacher right" id="posterTeacherRight" src="" onerror="this.style.display='none';">
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="videoOverlay">
+        <div class="video-modal">
+            <button class="close-btn" onclick="closeVideo()">✕</button>
+            <iframe id="ytIframe" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        const colors = {
+            white: "#FFFFFF",
+            golden: "#FFC107", 
+            orange: "#FF9800", 
+            silver: "#9E9E9E", 
+            purple: "#9C27B0"  
+        };
+
+        const projectData = [
+            { id: 1, group: "第一組", name: "AI評論分析與回覆", topC: colors.white, botC: colors.golden },
+            { id: 2, group: "第二組", name: "暖影––<br>AI情感陪伴與回憶保存APP", topC: colors.orange, botC: colors.white },
+            { id: 3, group: "第三組", name: "食驗室––<br>NUTRIDECODE", topC: colors.orange, botC: colors.white },
+            { id: 4, group: "第四組", name: "絕塑好蕉情––<br>香蕉假莖生物塑料與全無塑<br>食安包材計畫", topC: colors.golden, botC: colors.silver },
+            { id: 5, group: "第五組", name: "綠色循環––<br>熄菸袋再生系統", topC: colors.golden, botC: colors.silver },
+            { id: 6, group: "第六組", name: "Smart Wallet", topC: colors.orange, botC: colors.purple },
+            { id: 7, group: "第七組", name: "以n8n為核心的<br>自動化工作流設計與實作", topC: colors.golden, botC: colors.white },
+            { id: 8, group: "第八組", name: "我坐著升級––<br>Sitting Leveling", topC: colors.golden, botC: colors.white },
+            { id: 9, group: "第九組", name: "機票獵人––<br>FLIGHT HUNTER", topC: colors.white, botC: colors.golden }
+        ];
+
+        function initGrid() {
+            const container = document.getElementById('gridContainer');
+            projectData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                card.style.setProperty('--color-top', item.topC);
+                card.style.setProperty('--color-bottom', item.botC);
+                
+                const topLight = (item.topC === colors.white) ? 'rgba(255, 255, 255, 0.5)' : 'transparent';
+                const botLight = (item.botC === colors.white) ? 'rgba(255, 255, 255, 0.5)' : 'transparent';
+                
+                card.style.setProperty('--lighten-top', topLight);
+                card.style.setProperty('--lighten-bot', botLight);
+                
+                card.innerHTML = `
+                    <div class="card-top">
+                        <span class="group-id">${item.group}</span>
+                        <div class="project-name">${item.name}</div>
+                    </div>
+                    <div class="teacher-container">
+                        <img class="teacher-img" src="./image/Group/group_${item.id}.png" onerror="this.onerror=null; this.src='./image/Group/group_default.png';">
+                    </div>
+                `;
+                card.onclick = () => openPoster(item.id);
+                container.appendChild(card);
+            });
+        }
+
+        function openPoster(id) {
+            const posterImg = document.getElementById('posterDisplay');
+            const overlay = document.getElementById('posterOverlay');
+            const teacherLeft = document.getElementById('posterTeacherLeft');
+            const teacherRight = document.getElementById('posterTeacherRight');
+
+            posterImg.src = `./image/poster/poster_${id}.jpg`;
+            teacherLeft.src = `./image/poster_teacher/poster${id}_teacher_left.png`;
+            teacherRight.src = `./image/poster_teacher/poster${id}_teacher_right.png`;
+
+            // 打開海報時，先確保兩側老師圖片是顯示狀態
+            teacherLeft.style.display = 'block';
+            teacherRight.style.display = 'block';
+
+            posterImg.classList.remove('zoomed');
+            overlay.classList.remove('zoom-mode');
+            overlay.scrollTo(0, 0);
+
+            overlay.style.display = 'flex';
+        }
+
+        function closePoster() {
+            const overlay = document.getElementById('posterOverlay');
+            const posterImg = document.getElementById('posterDisplay');
+            
+            overlay.classList.remove('zoom-mode');
+            posterImg.classList.remove('zoomed');
+            
+            overlay.style.display = 'none';
+        }
+
+        // --- 雙擊滿版放大邏輯 ---
+        const posterImg = document.getElementById('posterDisplay');
+        let lastTap = 0;
+
+        posterImg.addEventListener('touchend', function(e) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                e.preventDefault(); 
+                togglePosterZoom();
+            }
+            lastTap = currentTime;
+        });
+
+        posterImg.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            togglePosterZoom();
+        });
+
+        // 【修改重點】在切換狀態時，用 JavaScript 同步強制修改 style，加上雙重保險
+        function togglePosterZoom() {
+            const overlay = document.getElementById('posterOverlay');
+            const teacherLeft = document.getElementById('posterTeacherLeft');
+            const teacherRight = document.getElementById('posterTeacherRight');
+            
+            posterImg.classList.toggle('zoomed');
+            overlay.classList.toggle('zoom-mode');
+            
+            if (posterImg.classList.contains('zoomed')) {
+                // ➔ 進入放大模式：用 JS 直接隱藏老師，不留任何死角
+                teacherLeft.style.display = 'none';
+                teacherRight.style.display = 'none';
+            } else {
+                // ➔ 恢復縮小模式：重新顯示老師
+                overlay.scrollTo(0, 0);
+                teacherLeft.style.display = 'block';
+                teacherRight.style.display = 'block';
+            }
+        }
+
+        // --- 影片視窗邏輯 ---
+        function openVideo() {
+            document.getElementById('videoOverlay').style.display = 'flex';
+        }
+        function closeVideo() {
+            document.getElementById('videoOverlay').style.display = 'none';
+            const iframe = document.getElementById('ytIframe');
+            iframe.src = iframe.src; 
+        }
+
+        initGrid();
+    </script>
+</body>
+</html>
