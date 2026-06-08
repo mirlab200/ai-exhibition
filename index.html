@@ -551,6 +551,9 @@
     </div>
 
     <script>
+        const IDLE_TIME = 5 * 60 * 1000; // 5分鐘 (300,000 毫秒)
+        let idleTimer;
+
         const colors = {
             white: "#FFFFFF",
             golden: "#FFC107", 
@@ -628,6 +631,9 @@
             overlay.scrollTo(0, 0);
 
             overlay.style.display = 'flex';
+            
+            // 打開海報時，強制重置一次閒置計時器
+            resetIdleTimer();
         }
 
         function closePoster() {
@@ -682,6 +688,9 @@
             document.getElementById('videoOverlay').style.display = 'flex';
             const vid = document.getElementById('localVideo');
             vid.play(); 
+            
+            // 打開影片時，強制重置一次閒置計時器
+            resetIdleTimer();
         }
         
         function closeVideo() {
@@ -691,7 +700,36 @@
             vid.currentTime = 0; 
         }
 
+        // --- 閒置 5 分鐘自動返回首頁邏輯 ---
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+
+            idleTimer = setTimeout(() => {
+                const posterOverlay = document.getElementById('posterOverlay');
+                const videoOverlay = document.getElementById('videoOverlay');
+
+                // 如果正在看海報，則關閉海報
+                if (posterOverlay.style.display === 'flex') {
+                    closePoster();
+                }
+
+                // 如果正在看影片，則關閉影片
+                if (videoOverlay.style.display === 'flex') {
+                    closeVideo();
+                }
+            }, IDLE_TIME);
+        }
+
+        // 包含：點擊(click)、觸控(touchstart/touchmove)、滑鼠移動(mousemove)、滾動(scroll)
+        const activeEvents = ['click', 'touchstart', 'touchmove', 'mousemove', 'scroll', 'keydown'];
+        activeEvents.forEach(event => {
+            // 使用 { passive: true } 可確保監聽器不會影響頁面滾動效能
+            document.addEventListener(event, resetIdleTimer, { passive: true });
+        });
+
+        // 網頁載入時初始化
         initGrid();
+        resetIdleTimer(); // 啟動第一次閒置計時
     </script>
 </body>
 </html>
